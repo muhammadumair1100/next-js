@@ -1,5 +1,6 @@
 "use client";
 
+import { DeleteUser } from "./deleteUser";
 import { useEffect, useState } from "react";
 import { UserTypes } from "@/types/createPostTypes";
 import { getData, updateData } from "@/actions/createPost";
@@ -17,6 +18,7 @@ export default function WatchPost() {
     age: "",
     location: "",
   });
+  const [deletUser, setDeletUser] = useState<UserTypes>();
 
   useEffect(() => {
     async function catchData() {
@@ -54,8 +56,19 @@ export default function WatchPost() {
     setUpdateField({ ...updateField, [field]: field });
   }
 
+  function handleDeleteData(formData: UserTypes) {
+    setDeletUser(formData);
+  }
+
   return (
     <>
+      {deletUser && (
+        <DeleteUser
+          name={deletUser.name}
+          id={deletUser.id}
+          deletUser={setDeletUser}
+        />
+      )}
       {userData && userData.length > 0 && (
         <div className="relative w-2/4 mt-20 rounded-xl border border-gray-200 shadow-sm">
           <table className="w-full text-left text-sm">
@@ -65,7 +78,8 @@ export default function WatchPost() {
                 <th className="px-6 py-4 font-semibold">Name</th>
                 <th className="px-6 py-4 font-semibold">Age</th>
                 <th className="px-6 py-4 font-semibold">Location</th>
-                <th className="px-6 py-4 font-semibold">Update</th>
+                <th className="px-6 py-4 font-bold">Update</th>
+                <th className="px-6 py-4 font-bold">Delete</th>
               </tr>
             </thead>
 
@@ -142,6 +156,13 @@ export default function WatchPost() {
                       Update
                     </td>
                   )}
+
+                  <td
+                    onClick={() => handleDeleteData(d)}
+                    className="font-extrabold text-red-500 cursor-pointer px-6 py-4 rounded-sm"
+                  >
+                    Delete
+                  </td>
                 </tr>
               ))}
             </tbody>

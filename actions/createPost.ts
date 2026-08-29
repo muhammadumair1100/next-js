@@ -6,6 +6,7 @@ import {
   getDocs,
   doc,
   updateDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { UserTypes } from "@/types/createPostTypes";
 
@@ -36,5 +37,12 @@ export async function updateData(
       const updatedUser = doc(db, "User", userId);
       await updateDoc(updatedUser, updatedData);
     }
+  }
+}
+
+export async function DeleteData(userId: string | undefined) {
+  if (userId) {
+    const deletedUser = doc(db, "User", userId);
+    await deleteDoc(deletedUser);
   }
 }
