@@ -4,6 +4,7 @@ import { DeleteUser } from "./deleteUser";
 import { useEffect, useState } from "react";
 import { UserTypes } from "@/types/createPostTypes";
 import { getData, updateData } from "@/actions/createPost";
+import { EmptyStore } from "./EmptyStore";
 
 export default function WatchPost() {
   const [userData, setUserData] = useState<UserTypes[] | null>([]);
@@ -69,7 +70,7 @@ export default function WatchPost() {
           deletUser={setDeletUser}
         />
       )}
-      {userData && userData.length > 0 && (
+      {userData && userData.length > 0 ? (
         <div className="relative w-2/4 mt-20 rounded-xl border border-gray-200 shadow-sm">
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-200 text-gray-700">
@@ -181,6 +182,8 @@ export default function WatchPost() {
             </div>
           )}
         </div>
+      ) : (
+        <EmptyStore />
       )}
     </>
   );

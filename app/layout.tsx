@@ -22,7 +22,7 @@ export default function RootLayout({
               href={"watch-post"}
               className="bg-neutral-600 cursor-pointer text-white px-4 py-2 rounded-md font-md text-base"
             >
-              See Post
+              Watch Post
             </Link>
           </div>
         </div>
