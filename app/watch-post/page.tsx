@@ -3,7 +3,7 @@
 import { DeleteUser } from "./deleteUser";
 import { useEffect, useState } from "react";
 import { UserTypes } from "@/types/createPostTypes";
-import { getData, updateData } from "@/actions/createPost";
+import { getData, updateData, deleteData } from "@/actions/createPost";
 import { EmptyStore } from "./EmptyStore";
 import Link from "next/link";
 
@@ -25,7 +25,8 @@ export default function WatchPost() {
   useEffect(() => {
     async function catchData() {
       try {
-        getData().then((data) => setUserData(data));
+        const data = await getData();
+        setUserData(data);
       } catch (error) {
         setUserData(null);
       }

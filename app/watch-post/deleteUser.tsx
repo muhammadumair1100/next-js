@@ -1,6 +1,6 @@
 import { UserTypes } from "@/types/createPostTypes";
 import { SetStateAction, Dispatch } from "react";
-import { DeleteData } from "@/actions/createPost";
+import { deleteData } from "@/actions/createPost";
 
 interface DeleteProps {
   name: string;
@@ -11,7 +11,7 @@ interface DeleteProps {
 export function DeleteUser({ name, id, deletUser }: DeleteProps) {
   function handleDeleteData() {
     deletUser(undefined);
-    DeleteData(id);
+    deleteData(id);
   }
 
   return (
