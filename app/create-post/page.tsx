@@ -24,7 +24,12 @@ export default function CreatePost() {
         </label>
         <input
           value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              name: e.target.value.trim(),
+            })
+          }
           type="text"
           name="title"
           id="title"
@@ -39,7 +44,12 @@ export default function CreatePost() {
         </label>
         <input
           value={formData.age}
-          onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+          onChange={(e) =>
+            setFormData({
+              ...formData,
+              age: e.target.value.trim(),
+            })
+          }
           type="text"
           name="number"
           id="title"
@@ -55,7 +65,10 @@ export default function CreatePost() {
         <input
           value={formData.location}
           onChange={(e) =>
-            setFormData({ ...formData, location: e.target.value })
+            setFormData({
+              ...formData,
+              location: e.target.value.trim(),
+            })
           }
           type="text"
           name="location"

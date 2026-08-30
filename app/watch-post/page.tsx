@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { UserTypes } from "@/types/createPostTypes";
 import { getData, updateData } from "@/actions/createPost";
 import { EmptyStore } from "./EmptyStore";
+import Link from "next/link";
 
 export default function WatchPost() {
   const [userData, setUserData] = useState<UserTypes[] | null>([]);
@@ -34,7 +35,7 @@ export default function WatchPost() {
 
   function handleInputsValue(e: any) {
     const { name, value } = e.target;
-    setInputData({ ...inputData, [name]: value });
+    setInputData({ ...inputData, [name]: value.toLowerCase() });
   }
 
   function handleUpdateData(formData: UserTypes) {
@@ -103,8 +104,8 @@ export default function WatchPost() {
                       />
                     </td>
                   ) : (
-                    <td className="px-6 py-4 font-medium text-gray-900">
-                      {d.name}
+                    <td className="px-6 py-4 hover:underline font-medium text-gray-900">
+                      <Link href={`watch-post/${d.id}`}>{d.name}</Link>
                     </td>
                   )}
 
