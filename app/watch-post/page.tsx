@@ -3,7 +3,7 @@
 import { DeleteUser } from "./deleteUser";
 import { useEffect, useState } from "react";
 import { UserTypes } from "@/types/createPostTypes";
-import { getData, updateData, deleteData } from "@/actions/createPost";
+import { getData, updateData } from "@/actions/createPost";
 import { EmptyStore } from "./EmptyStore";
 import Link from "next/link";
 
@@ -34,7 +34,7 @@ export default function WatchPost() {
     catchData();
   }, []);
 
-  function handleInputsValue(e: any) {
+  function handleInputsValue(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
     setInputData({ ...inputData, [name]: value.toLowerCase() });
   }

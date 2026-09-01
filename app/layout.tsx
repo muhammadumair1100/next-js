@@ -9,8 +9,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body cz-shortcut-listen="true">
-        <div className="flex mx-auto w-2/4 items-center py-5 justify-between">
-          <h1 className="text-2xl text-gray-400 font-bold">FireBase</h1>
+        {/* This is firestore and realtime databases section  */}
+        {/* <div className="flex mx-auto w-2/4 items-center py-5 justify-between">
+          <Link href={"/"} className="text-2xl text-gray-400 font-bold">
+            FireBase
+          </Link>
           <div className="flex items-center gap-3">
             <Link
               href={"/create-post"}
@@ -31,10 +34,8 @@ export default function RootLayout({
               Filter By Name & Age
             </Link>
           </div>
-        </div>
-        <div className="text-center flex justify-center h-full border-white">
-          {children}
-        </div>
+        </div> */}
+        <div className="w-screen h-screen">{children}</div>
       </body>
     </html>
   );

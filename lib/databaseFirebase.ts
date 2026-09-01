@@ -1,4 +1,3 @@
-// Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getDatabase } from "firebase/database";
@@ -6,6 +5,7 @@ import { getDatabase } from "firebase/database";
 const firebaseConfig = {
   apiKey: "AIzaSyBgeMDBGVl1ROilUNRJlbfvbsDyYDuKBSU",
   authDomain: "fir-project-cf757.firebaseapp.com",
+  databaseURL: "https://fir-project-cf757-default-rtdb.firebaseio.com",
   projectId: "fir-project-cf757",
   storageBucket: "fir-project-cf757.firebasestorage.app",
   messagingSenderId: "244309264434",
@@ -13,7 +13,6 @@ const firebaseConfig = {
   measurementId: "G-JSS1BCTEJM",
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const firestoreDB = getFirestore(app);
 const realTimeDB = getDatabase(app);

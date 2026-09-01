@@ -1,5 +1,4 @@
-"use client";
-import { firestoreDB, realTimeDB } from "@/lib/firebase";
+import { firestoreDB, realTimeDB } from "@/lib/databaseFirebase";
 import { UserTypes } from "@/types/createPostTypes";
 
 // Firebase Firestore Database All Imports
@@ -64,17 +63,17 @@ import { ref, set, push, get, update, remove } from "firebase/database";
 //   }
 // }
 // Using Firebase Firestore To Get Single Data By Id
-export async function getUserDetails(
-  userId: string,
-): Promise<UserTypes | undefined> {
-  const userRef = doc(firestoreDB, "User", userId);
-  const userSnapShot = await getDoc(userRef);
+// export async function getUserDetails(
+//   userId: string,
+// ): Promise<UserTypes | undefined> {
+//   const userRef = doc(firestoreDB, "User", userId);
+//   const userSnapShot = await getDoc(userRef);
 
-  if (userSnapShot.exists()) {
-    return userSnapShot.data() as UserTypes;
-  }
-  return undefined;
-}
+//   if (userSnapShot.exists()) {
+//     return userSnapShot.data() as UserTypes;
+//   }
+//   return undefined;
+// }
 // Using Firebase Firestore To Get Multiple Same Data By Name And Age
 export async function getByNameAge({
   name,
@@ -141,4 +140,17 @@ export async function deleteData(userId: string | undefined) {
     const userRef = ref(realTimeDB, `Users/${userId}`);
     await remove(userRef);
   }
+}
+
+// Using Firebase Realtime Database To Get Single Data By Id
+export async function getUserDetails(
+  userId: string,
+): Promise<UserTypes | undefined> {
+  const userRef = ref(realTimeDB, `Users/${userId}`);
+  const snapshot = await get(userRef);
+
+  if (snapshot.exists()) {
+    return snapshot.val() as UserTypes;
+  }
+  return undefined;
 }
