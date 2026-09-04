@@ -4,7 +4,7 @@ import {
   signInWithEmailAndPassword,
 } from "firebase/auth";
 
-export async function signUp(email: string, password: string) {
+export async function signup(email: string, password: string) {
   try {
     return await createUserWithEmailAndPassword(auth, email, password);
   } catch (error: any) {
@@ -20,7 +20,7 @@ export async function signUp(email: string, password: string) {
   }
 }
 
-export async function LogIn(email: string, password: string) {
+export async function login(email: string, password: string) {
   try {
     return await signInWithEmailAndPassword(auth, email, password);
   } catch (error: any) {
