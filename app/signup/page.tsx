@@ -1,10 +1,25 @@
 "use client";
 import { SignupTypes } from "@/types/AuthTypes";
 import React, { useState } from "react";
-import { signup } from "@/actions/auth";
-import { registerUser } from "@/actions/signUpDatabase";
+import { signUp } from "@/actions/auth";
+import { getUser, registerUser, userActivity } from "@/actions/signUpDatabase";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "@/lib/Auth";
+import { useActivity } from "@/contextAPI/ActivityContent";
+import { useAuth } from "@/contextAPI/AuthContext";
 
 export default function SignupForm() {
+  const now = new Date();
+
+  const time = now.toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  const { setUserActivity } = useActivity();
+  const { user } = useAuth();
+
   const [signupForm, setSignupForm] = useState<SignupTypes>({
     firstName: "",
     lastName: "",
@@ -21,12 +36,29 @@ export default function SignupForm() {
   async function handleSubmit(e: React.SubmitEvent) {
     e.preventDefault();
     setError("");
+
+    if (
+      !signupForm.firstName &&
+      !signupForm.lastName &&
+      !signupForm.email &&
+      !signupForm.password
+    ) {
+      setError("Fill all the fields");
+      return;
+    }
     try {
-      const user = await signup(signupForm.email, signupForm.password);
-      registerUser(user?.user.uid, {
-        firstName: signupForm.firstName,
-        lastName: signupForm.lastName,
-      });
+      const registerUser = await signUp(signupForm);
+
+      if (registerUser) {
+        const userData = await getUser(registerUser.uid);
+        userActivity({
+          firstName: userData?.firstName as string,
+          lastName: userData?.lastName as string,
+          time: time,
+          action: "Registered",
+        });
+      }
+
       setSignupForm({
         ...signupForm,
         firstName: "",
@@ -34,9 +66,8 @@ export default function SignupForm() {
         email: "",
         password: "",
       });
-      alert("User Successfully SignedIn...");
     } catch (err: any) {
-      setError(err?.message);
+      setError(err.message);
     }
   }
 

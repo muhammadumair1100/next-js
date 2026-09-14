@@ -106,22 +106,22 @@ export async function addData(formData: UserTypes) {
 }
 
 // Using Firebase Realtime Database To Get Data
-export async function getData() {
-  const userRef = ref(realTimeDB, "Users");
-  const snapshot = await get(userRef);
+// export async function getData() {
+//   const userRef = ref(realTimeDB, "Users");
+//   const snapshot = await get(userRef);
 
-  if (snapshot.exists()) {
-    const rawData = snapshot.val();
-    const dataArray = Object.entries(rawData).map(([key, value]) => ({
-      id: key,
-      ...(value as UserTypes),
-    }));
+//   if (snapshot.exists()) {
+//     const rawData = snapshot.val();
+//     const dataArray = Object.entries(rawData).map(([key, value]) => ({
+//       id: key,
+//       ...(value as UserTypes),
+//     }));
 
-    return dataArray;
-  }
+//     return dataArray;
+//   }
 
-  return [];
-}
+//   return [];
+// }
 
 // Using Firebase Realtime Database To Update Data
 export async function updateData(
@@ -143,14 +143,14 @@ export async function deleteData(userId: string | undefined) {
 }
 
 // Using Firebase Realtime Database To Get Single Data By Id
-export async function getUserDetails(
-  userId: string,
-): Promise<UserTypes | undefined> {
-  const userRef = ref(realTimeDB, `Users/${userId}`);
-  const snapshot = await get(userRef);
+// export async function getUserDetails(
+//   userId: string,
+// ): Promise<UserTypes | undefined> {
+//   const userRef = ref(realTimeDB, `Users/${userId}`);
+//   const snapshot = await get(userRef);
 
-  if (snapshot.exists()) {
-    return snapshot.val() as UserTypes;
-  }
-  return undefined;
-}
+//   if (snapshot.exists()) {
+//     return snapshot.val() as UserTypes;
+//   }
+//   return undefined;
+// }

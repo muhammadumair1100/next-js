@@ -1,5 +1,7 @@
 import "@/app/globals.css";
 import Link from "next/link";
+import { AuthProvider } from "@/contextAPI/AuthContext";
+import { ActivityProvider } from "@/contextAPI/ActivityContent";
 
 export default function RootLayout({
   children,
@@ -8,7 +10,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body cz-shortcut-listen="true">
+      <body suppressHydrationWarning={true}>
         {/* This is firestore and realtime databases section  */}
         {/* <div className="flex mx-auto w-2/4 items-center py-5 justify-between">
           <Link href={"/"} className="text-2xl text-gray-400 font-bold">
@@ -35,7 +37,11 @@ export default function RootLayout({
             </Link>
           </div>
         </div> */}
-        <div className="w-screen h-screen">{children}</div>
+        <AuthProvider>
+          <ActivityProvider>
+            <div className="w-screen h-screen">{children}</div>
+          </ActivityProvider>
+        </AuthProvider>
       </body>
     </html>
   );

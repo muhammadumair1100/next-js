@@ -1,59 +1,9 @@
-// "use client";
-// import { useState } from "react";
-// import { SignupForm } from "./SignupForm";
-// import { LoginForm } from "./LoginForm";
-
-// export default function Home() {
-//   const [signUpLogIn, setSignUpLogIn] = useState("SIGNUP");
-//   return (
-//     // This section is for firestore and realtime databases
-//     // <div className="text-lg mt-10 w-5/12 h-80 flex  flex-col items-center rounded-md justify-center font-medium bg-white shadow-[0_0_20px_rgba(0,0,0,0.2)]">
-//     //   <h1 className="text-gray-500">
-//     //     Want To Create Post?{" "}
-//     //     <span className="uppercase text-black">Click Post Button!</span>
-//     //   </h1>
-//     //   <h1 className="text-gray-500">
-//     //     Want To Watch Post?{" "}
-//     //     <span className="uppercase text-black">Click Watch Button!</span>
-//     //   </h1>
-//     // </div>
-
-//     // This section is for Authentication
-//     // <>
-//     //   {signUpLogIn === "SIGNUP" ? (
-//     //     <SignupForm loginValue={signUpLogIn} login={setSignUpLogIn} />
-//     //   ) : (
-//     //     <LoginForm signupValue={signUpLogIn} signup={setSignUpLogIn} />
-//     //   )}
-//     // </>
-//   );
-// }
 "use client";
-import React from "react";
-import {
-  Bell,
-  Search,
-  LayoutDashboard,
-  Users,
-  FileText,
-  Settings,
-} from "lucide-react";
 import Link from "next/link";
+import { useActivity } from "@/contextAPI/ActivityContent";
 
 export default function HomeDashboard() {
-  const stats = [
-    { label: "Total Users", value: "1,284" },
-    { label: "Active Today", value: "312" },
-    { label: "Pending Sessions", value: "18" },
-  ];
-
-  const activity = [
-    { name: "Umair Khan", action: "Signed up", time: "2m ago" },
-    { name: "Sara Ahmed", action: "Logged in", time: "14m ago" },
-    { name: "Ali Raza", action: "Updated profile", time: "1h ago" },
-    { name: "Fatima Noor", action: "Signed up", time: "3h ago" },
-  ];
-
+  const { userActivity } = useActivity();
   return (
     <section className="min-h-screen w-full bg-[#f7fafa]">
       {/* Navbar */}
@@ -121,21 +71,6 @@ export default function HomeDashboard() {
           </p>
         </div>
 
-        {/* Stats row */}
-        {/* <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-3">
-          {stats.map((stat, idx) => (
-            <div
-              key={idx}
-              className="rounded-[14px] border border-[#dce7e6] bg-white p-5 shadow-[0_2px_6px_rgba(20,40,40,0.07)]"
-            >
-              <p className="text-xs font-medium text-[#899695]">{stat.label}</p>
-              <p className="mt-2 text-2xl font-bold text-[#172121]">
-                {stat.value}
-              </p>
-            </div>
-          ))}
-        </div> */}
-
         {/* Recent activity */}
         <div className="mt-8 rounded-[14px] border border-[#dce7e6] bg-white shadow-[0_2px_6px_rgba(20,40,40,0.07)]">
           <div className="border-b border-[#dce7e6] px-5 py-4">
@@ -143,27 +78,32 @@ export default function HomeDashboard() {
               Recent Activity
             </h2>
           </div>
-          {/* <ul className="divide-y divide-[#dce7e6]">
-            {activity.map((item, idx) => (
-              <li
-                key={idx}
-                className="flex items-center justify-between px-5 py-4"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#ecf8f7] text-sm font-semibold text-[#0f766e]">
-                    {item.name.charAt(0)}
+          <ul className="divide-y max-h-[400px] overflow-y-scroll scrollbar-none divide-[#dce7e6]">
+            {userActivity.length > 0 &&
+              userActivity.map((item, idx) => (
+                <li
+                  key={idx}
+                  className="flex items-center justify-between px-5 py-4"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#ecf8f7] text-sm font-semibold text-[#0f766e]">
+                      {item.firstName.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-sm tracking-wider font-mono  text-[#172121]">
+                        {item.firstName} {item.lastName}
+                      </p>
+                      <p className="text-xs font-extrabold text-[#526161]">
+                        {item.action}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-[#172121]">
-                      {item.name}
-                    </p>
-                    <p className="text-xs text-[#526161]">{item.action}</p>
-                  </div>
-                </div>
-                <span className="text-xs text-[#899695]">{item.time}</span>
-              </li>
-            ))}
-          </ul> */}
+                  <span className="text-xs font-normal text-[#899695]">
+                    {item.time}
+                  </span>
+                </li>
+              ))}
+          </ul>
         </div>
       </main>
     </section>

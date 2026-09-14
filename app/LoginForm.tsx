@@ -1,6 +1,6 @@
 "use client";
 import { Dispatch, useState, SetStateAction } from "react";
-import { LogIn } from "@/actions/auth";
+import { logIn } from "@/actions/auth";
 
 export function LoginForm({
   signup,
@@ -15,7 +15,7 @@ export function LoginForm({
     e.preventDefault();
 
     try {
-      const user = await LogIn(email, password);
+      const user = await logIn(email, password);
       alert("Successfully LogedIn");
       setEmail("");
       setPassword("");
