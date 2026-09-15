@@ -3,4 +3,6 @@ export interface ProductsType {
   name: string;
   price: string;
   description: string;
+  productID?: string;
+  Qty?: number;
 }

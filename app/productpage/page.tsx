@@ -10,6 +10,7 @@ import {
   Loader2,
   CheckCircle2,
   Circle,
+  ShoppingBag,
 } from "lucide-react";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { auth } from "@/lib/Auth";
@@ -18,6 +19,7 @@ import {
   getProducts,
   deleteProduct,
   updateProduct,
+  addInCart,
 } from "@/actions/products";
 import { ProductsType } from "@/types/ProductsTypes";
 import { logOut } from "@/actions/auth";
@@ -26,6 +28,7 @@ import { useActivity } from "@/contextAPI/ActivityContent";
 import { getUser } from "@/actions/signUpDatabase";
 import { useAuth } from "@/contextAPI/AuthContext";
 import { userActivity } from "@/actions/signUpDatabase";
+import Link from "next/link";
 
 export default function ProductsPage() {
   const now = new Date();
@@ -43,7 +46,7 @@ export default function ProductsPage() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [products, setProducts] = useState<ProductsType[]>([]);
   const [loading, setLoading] = useState(false);
-  const [select, setSelect] = useState<boolean>(true);
+  const [select, setSelect] = useState<boolean>(false);
   const [selected, setSelected] = useState<number[]>([]);
 
   // Form State
@@ -100,7 +103,6 @@ export default function ProductsPage() {
         await updateProduct(fields, editingId);
       } else {
         await addProducts(fields, currentUser.uid);
-        console.log(fields);
       }
 
       setFields({ name: "", price: "", description: "" });
@@ -137,16 +139,11 @@ export default function ProductsPage() {
 
     try {
       setLoading(true);
-      if (typeof deleteProduct === "function") {
-        await deleteProduct(id);
-      } else {
-        console.warn("deleteProduct action not found, skipping delete.");
-        setProducts((prev) => prev.filter((p) => p.id !== id));
-        return;
-      }
+      await deleteProduct(id);
 
       if (currentUser) {
         await fetchProducts(currentUser.uid);
+        console.log("Helo");
       }
     } catch (err) {
       console.error("Delete failed", err);
@@ -172,10 +169,19 @@ export default function ProductsPage() {
     router.push("/");
   }
 
+  // Select Products, Cancel Selection, Confirm Selection
   function handleSelect() {
-    setSelect(!select);
+    if (select && selected.length > 0) {
+      const sPro = products.filter((p) => selected.includes(Number(p.id)));
+      if (currentUser) addInCart(sPro, currentUser.uid);
+      setSelect(false);
+      setSelected([]);
+    } else {
+      setSelect(!select);
+    }
   }
 
+  // Add Temporary Selected Products
   function handleSelectedProducts(id: number) {
     if (select) {
       setSelected((prev) =>
@@ -214,6 +220,12 @@ export default function ProductsPage() {
                   ? "Cancel"
                   : "Select"}
             </button>
+            <Link
+              href={"/cart"}
+              className="bg-teal-300 px-5 py-2 rounded-lg cursor-pointer "
+            >
+              <ShoppingBag size={20} />
+            </Link>
           </div>
         </div>
 
@@ -339,9 +351,9 @@ export default function ProductsPage() {
                       <div className="flex items-center gap-4">
                         {select &&
                           (selected.includes(Number(product.id)) ? (
-                            <CheckCircle2 />
+                            <CheckCircle2 className="text-teal-600 size-4" />
                           ) : (
-                            <Circle />
+                            <Circle className="text-teal-600 size-4" />
                           ))}
 
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-teal-50 text-teal-600">

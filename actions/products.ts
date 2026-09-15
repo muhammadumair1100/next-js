@@ -36,14 +36,6 @@ import { ProductsType } from "@/types/ProductsTypes";
 
 //   return productsData;
 // }
-// Type define karein (Ya apne types folder se import karein)
-export interface ProductData {
-  id?: string;
-  name: string;
-  price: string | number;
-  description: string;
-  createdAt?: any;
-}
 
 // 1. CREATE: Naya Product Add Karein
 export async function addProducts(product: ProductsType, userId: string) {
@@ -52,7 +44,7 @@ export async function addProducts(product: ProductsType, userId: string) {
     const docRef = await addDoc(productsRef, {
       ...product,
       productID: userId,
-      id: Date.now(),
+      id: String(Date.now()),
     });
     return { success: true, id: docRef.id };
   } catch (error) {
@@ -111,11 +103,31 @@ export async function updateProduct(product: ProductsType, editID: string) {
 // 4. DELETE: Product Ko Delete Karein
 export async function deleteProduct(productId: string) {
   try {
-    const productRef = doc(firestoreDB, "products", productId);
+    const productRef = doc(firestoreDB, "Products", productId);
     await deleteDoc(productRef);
     return { success: true };
   } catch (error) {
     console.error("Error deleting product:", error);
     throw new Error("Failed to delete product");
   }
+}
+
+export async function addInCart(product: ProductsType[], userId: string) {
+  await addDoc(collection(firestoreDB, "Cart"), {
+    qty: 1,
+    productId: userId,
+    cartProduct: product,
+  });
+}
+
+export async function getFromCart(userId: string): Promise<ProductsType[]> {
+  const prodcutsRef = collection(firestoreDB, "Cart");
+  const querySnapshot = query(prodcutsRef, where("userId", "==", userId));
+  const data = await getDocs(querySnapshot);
+
+  const productList: ProductsType[] = [];
+  data.forEach((doc) =>
+    productList.push(...(doc.data().cartProduct as ProductsType[])),
+  );
+  return productList;
 }
