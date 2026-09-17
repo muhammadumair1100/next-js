@@ -5,13 +5,15 @@ import { useAuth } from "@/contextAPI/AuthContext";
 import { ProductsType } from "@/types/ProductsTypes";
 import { User } from "firebase/auth";
 import { useEffect, useState } from "react";
+import { Trash2, Minus, Plus } from "lucide-react";
+import { deleteFromCart } from "@/actions/products";
 
 export default function CartPage() {
   const { user } = useAuth();
   const [currUser, setCurrUser] = useState<User | null>();
   const [cartData, setCartData] = useState<ProductsType[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true); // ⭐ loading state
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function getData() {
@@ -20,12 +22,14 @@ export default function CartPage() {
         if (user) {
           setCurrUser(user);
           const data = await getFromCart(user.uid);
+          console.log(data);
           setCartData([...data]);
         }
       } catch (err: any) {
         setError("Failed To Fetch Data...");
+        console.log(err.message);
       } finally {
-        setLoading(false); // ⭐ loading band
+        setLoading(false);
       }
     }
 
@@ -33,22 +37,50 @@ export default function CartPage() {
   }, [user]);
 
   // ⭐ Calculations
-  const subtotal = cartData.reduce((acc, item) => acc + Number(item.price), 0);
+  const subtotal = cartData.reduce(
+    (acc, item) => acc + Number(item.price) * (item.Qty || 1),
+    0,
+  );
   const shipping = cartData.length > 0 ? 5 : 0;
   const tax = subtotal * 0.05;
   const total = subtotal + shipping + tax;
 
-  // ⭐ Remove function (UI only — aap logic add kar sakte ho)
-  function handleRemove(id?: string) {
-    setCartData((prev) => prev.filter((item) => item.productID !== id));
+  function handleIncrease(id?: string) {
+    setCartData((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, Qty: (item.Qty || 1) + 1 } : item,
+      ),
+    );
   }
 
-  // ⭐ Final Sell Out (UI only)
+  function handleDecrease(id?: string) {
+    setCartData((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? { ...item, Qty: Math.max(1, (item.Qty || 1) - 1) }
+          : item,
+      ),
+    );
+  }
+
+  async function handleDelete(id?: string, proID?: string) {
+    if (!confirm("Are you sure you want to remove this product?")) return;
+
+    try {
+      await deleteFromCart(id!);
+      if (user) {
+        const data = await getFromCart(proID!);
+        setCartData([...data]);
+      }
+    } catch (err: any) {
+      console.log(err.message);
+    }
+  }
+
   function handleSellOut() {
     console.log("Sell out clicked", cartData);
   }
 
-  // ⭐ LOADING STATE
   if (loading) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-white to-teal-50/30">
@@ -62,7 +94,6 @@ export default function CartPage() {
     );
   }
 
-  // ⭐ ERROR STATE
   if (error) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-slate-50 via-white to-teal-50/30">
@@ -123,7 +154,6 @@ export default function CartPage() {
           <div className="lg:col-span-8">
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
               {cartData.length === 0 ? (
-                // ⭐ EMPTY STATE
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <div className="mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 text-slate-400">
                     <svg
@@ -151,12 +181,13 @@ export default function CartPage() {
               ) : (
                 cartData.map((data) => (
                   <div
-                    key={data.productID}
+                    key={data.id}
                     className="group flex items-center gap-5 border-b border-slate-100 p-5 transition-colors last:border-b-0 hover:bg-slate-50/70"
                   >
                     <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple-50 to-purple-100 text-xl font-bold text-purple-600">
                       {data.name.charAt(0).toUpperCase()}
                     </div>
+
                     <div className="flex-1">
                       <h3 className="text-base font-semibold text-slate-900">
                         {data.name}
@@ -164,19 +195,40 @@ export default function CartPage() {
                       <p className="mt-1 text-sm text-slate-500 line-clamp-1">
                         {data.description}
                       </p>
-                      <p className="mt-2 text-sm font-medium text-teal-600">
-                        Qty: {data.Qty}
-                      </p>
+
+                      <div className="mt-3 inline-flex items-center rounded-lg border border-slate-200 bg-slate-50">
+                        <button
+                          onClick={() => handleDecrease(data.id)}
+                          className="flex h-7 w-7 items-center justify-center rounded-l-lg text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700 active:scale-95"
+                          title="Decrease"
+                        >
+                          <Minus size={14} strokeWidth={2.5} />
+                        </button>
+
+                        <span className="flex h-7 w-9 items-center justify-center border-x border-slate-200 bg-white text-xs font-semibold text-slate-900">
+                          {data.Qty || 1}
+                        </span>
+
+                        <button
+                          onClick={() => handleIncrease(data.id)}
+                          className="flex h-7 w-7 items-center justify-center rounded-r-lg text-slate-500 transition-colors hover:bg-slate-200 hover:text-slate-700 active:scale-95"
+                          title="Increase"
+                        >
+                          <Plus size={14} strokeWidth={2.5} />
+                        </button>
+                      </div>
                     </div>
+
                     <div className="text-right">
                       <p className="text-lg font-bold text-slate-900">
-                        ${Number(data.price).toFixed(2)}
+                        ${(Number(data.price) * (data.Qty || 1)).toFixed(2)}
                       </p>
                       <button
-                        onClick={() => handleRemove(data.productID)}
-                        className="mt-2 text-xs font-medium text-red-500 hover:text-red-700 transition-colors"
+                        onClick={() => handleDelete(data.id!, data.productID)}
+                        className="mt-2 rounded-md p-2 text-slate-400 cursor-pointer hover:bg-red-50 hover:text-red-600 transition-colors"
+                        title="Delete"
                       >
-                        Remove
+                        <Trash2 size={18} />
                       </button>
                     </div>
                   </div>

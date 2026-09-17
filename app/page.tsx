@@ -4,8 +4,9 @@ import { useActivity } from "@/contextAPI/ActivityContent";
 
 export default function HomeDashboard() {
   const { userActivity } = useActivity();
+
   return (
-    <section className="min-h-screen w-full bg-[#f7fafa]">
+    <section className="min-h-full bg-[#f7fafa]">
       {/* Navbar */}
       <header className="flex w-full items-center justify-between border-b border-[#dce7e6] bg-white px-6 py-4 lg:px-10">
         {/* Logo */}
@@ -43,22 +44,6 @@ export default function HomeDashboard() {
             Settings
           </a>
         </nav>
-
-        {/* Auth buttons */}
-        <div className="flex items-center gap-3">
-          <Link
-            href={"/login"}
-            className="rounded-[10px] cursor-pointer border border-[#dce7e6] bg-white px-4 py-2 text-sm font-semibold text-[#172121] shadow-[0_2px_6px_rgba(20,40,40,0.07)] transition-all hover:border-[#0f766e] hover:text-[#0f766e] active:scale-95"
-          >
-            Log In
-          </Link>
-          <Link
-            href={"/signup"}
-            className="rounded-[10px] cursor-pointer bg-[#0f766e] px-4 py-2 text-sm font-semibold text-white shadow-[0_2px_6px_rgba(20,40,40,0.07)] transition-all hover:bg-[#0b625c] active:scale-95"
-          >
-            Sign Up
-          </Link>
-        </div>
       </header>
 
       {/* Main content */}
@@ -90,7 +75,7 @@ export default function HomeDashboard() {
                       {item.firstName.charAt(0)}
                     </div>
                     <div>
-                      <p className="text-sm tracking-wider font-mono  text-[#172121]">
+                      <p className="text-sm tracking-wider font-mono text-[#172121]">
                         {item.firstName} {item.lastName}
                       </p>
                       <p className="text-xs font-extrabold text-[#526161]">

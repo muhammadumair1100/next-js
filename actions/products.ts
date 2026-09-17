@@ -8,6 +8,7 @@ import {
   deleteDoc,
   updateDoc,
   Timestamp,
+  setDoc,
 } from "firebase/firestore";
 import { firestoreDB } from "@/lib/authDatabase";
 import { ProductsType } from "@/types/ProductsTypes";
@@ -39,14 +40,14 @@ import { ProductsType } from "@/types/ProductsTypes";
 
 // 1. CREATE: Naya Product Add Karein
 export async function addProducts(product: ProductsType, userId: string) {
+  const timeID = String(Date.now());
   try {
-    const productsRef = collection(firestoreDB, "Products");
-    const docRef = await addDoc(productsRef, {
+    const productsRef = doc(firestoreDB, "Products", timeID);
+    await setDoc(productsRef, {
       ...product,
       productID: userId,
-      id: String(Date.now()),
+      id: timeID,
     });
-    return { success: true, id: docRef.id };
   } catch (error) {
     console.error("Error adding product:", error);
     throw new Error("Failed to add product");
@@ -112,22 +113,48 @@ export async function deleteProduct(productId: string) {
   }
 }
 
-export async function addInCart(product: ProductsType[], userId: string) {
-  await addDoc(collection(firestoreDB, "Cart"), {
-    qty: 1,
-    productId: userId,
-    cartProduct: product,
-  });
+// 1. Add In Cart
+export async function addInCart(
+  product: ProductsType[] | ProductsType,
+  userId: string,
+  id?: string,
+) {
+  try {
+    if (Array.isArray(product)) {
+      for (const p of product) {
+        await setDoc(doc(firestoreDB, "Cart", p.id!), {
+          ...p,
+          Qty: 1,
+        });
+      }
+    } else {
+      await setDoc(doc(firestoreDB, "Cart", product.id!), {
+        ...product,
+        Qty: 1,
+      });
+    }
+  } catch (error: any) {
+    throw new Error("Product Was Not Added");
+  }
 }
 
+// 2. Get From Cart
 export async function getFromCart(userId: string): Promise<ProductsType[]> {
   const prodcutsRef = collection(firestoreDB, "Cart");
-  const querySnapshot = query(prodcutsRef, where("userId", "==", userId));
+  const querySnapshot = query(prodcutsRef, where("productID", "==", userId));
   const data = await getDocs(querySnapshot);
 
   const productList: ProductsType[] = [];
-  data.forEach((doc) =>
-    productList.push(...(doc.data().cartProduct as ProductsType[])),
-  );
+  data.forEach((doc) => productList.push(doc.data() as ProductsType));
   return productList;
+}
+
+// 3. Delete From Cart
+export async function deleteFromCart(id: string) {
+  try {
+    const productRef = doc(firestoreDB, "Cart", id);
+    await deleteDoc(productRef);
+  } catch (error: any) {
+    throw new Error("Product Was Not Deleted");
+  }
 }

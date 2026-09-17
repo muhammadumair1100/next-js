@@ -36,10 +36,7 @@ export async function getUser(
 }
 
 export async function userActivity(activities: UserActivity) {
-  const activity = await addDoc(
-    collection(firestoreDB, "Activities"),
-    activities,
-  );
+  await addDoc(collection(firestoreDB, "Activities"), activities);
 }
 
 export async function getActivity(): Promise<UserActivity[] | undefined> {

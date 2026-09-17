@@ -31,13 +31,6 @@ import { userActivity } from "@/actions/signUpDatabase";
 import Link from "next/link";
 
 export default function ProductsPage() {
-  const now = new Date();
-
-  const time = now.toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
   const { user } = useAuth();
 
   const { setUserActivity } = useActivity();
@@ -153,31 +146,21 @@ export default function ProductsPage() {
   }
 
   // Logout User
-  async function handleLogOut() {
-    if (user) {
-      const userData = await getUser(user.uid);
-      if (userData) {
-        userActivity({
-          firstName: userData.firstName,
-          lastName: userData.lastName,
-          time: time,
-          action: "LogedOut",
-        });
-      }
-    }
-    await logOut();
-    router.push("/");
-  }
 
   // Select Products, Cancel Selection, Confirm Selection
-  function handleSelect() {
-    if (select && selected.length > 0) {
-      const sPro = products.filter((p) => selected.includes(Number(p.id)));
-      if (currentUser) addInCart(sPro, currentUser.uid);
-      setSelect(false);
-      setSelected([]);
-    } else {
-      setSelect(!select);
+  async function handleSelect() {
+    try {
+      if (select && selected.length > 0) {
+        const sPro = products.filter((p) => selected.includes(Number(p.id)));
+        if (currentUser) await addInCart(sPro, currentUser.uid);
+        alert("Products Were Added");
+        setSelect(false);
+        setSelected([]);
+      } else {
+        setSelect(!select);
+      }
+    } catch (error: any) {
+      alert(error.message);
     }
   }
 
@@ -187,6 +170,16 @@ export default function ProductsPage() {
       setSelected((prev) =>
         prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
       );
+      setSelected((prev) => prev.filter((p) => p));
+    }
+  }
+
+  async function handleAddSingleProduct(product: ProductsType, id: string) {
+    try {
+      await addInCart(product, id);
+      alert("Product Was Added");
+    } catch (error: any) {
+      alert(error.message);
     }
   }
 
@@ -204,12 +197,6 @@ export default function ProductsPage() {
             </p>
           </div>
           <div className="flex items-center gap-5">
-            <button
-              onClick={handleLogOut}
-              className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-medium text-red-600 shadow-sm ring-1 ring-inset ring-red-200 hover:bg-red-50 transition-colors"
-            >
-              Sign Out
-            </button>
             <button
               onClick={() => handleSelect()}
               className="inline-flex cursor-pointer items-center gap-2 rounded-lg bg-teal-600 hover:bg-teal-700  px-4 py-2 text-sm font-medium text-white shadow-sm  transition-colors"
@@ -295,7 +282,7 @@ export default function ProductsPage() {
                   type="submit"
                   onClick={handleSubmit}
                   disabled={loading}
-                  className={`flex w-full items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-white transition-all ${
+                  className={`flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-white transition-all ${
                     editingId
                       ? "bg-blue-600 hover:bg-blue-700"
                       : "bg-teal-600 hover:bg-teal-700"
@@ -344,7 +331,9 @@ export default function ProductsPage() {
                 <ul className="divide-y max-h-150 overflow-y-scroll scrollbar-none divide-slate-100">
                   {products.map((product, index) => (
                     <li
-                      onClick={() => handleSelectedProducts(Number(product.id))}
+                      onClick={() =>
+                        handleSelectedProducts(Number(product.id!))
+                      }
                       key={product.id}
                       className="group flex cursor-pointer items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
                     >
@@ -373,7 +362,12 @@ export default function ProductsPage() {
                       </div>
 
                       <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        <button className="rounded-md cursor-pointer bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors">
+                        <button
+                          onClick={() =>
+                            handleAddSingleProduct(product, product.id!)
+                          }
+                          className="rounded-md cursor-pointer bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
+                        >
                           Buy
                         </button>
 
