@@ -9,6 +9,7 @@ import {
   updateDoc,
   Timestamp,
   setDoc,
+  writeBatch,
 } from "firebase/firestore";
 import { firestoreDB } from "@/lib/authDatabase";
 import { ProductsType } from "@/types/ProductsTypes";
@@ -38,6 +39,7 @@ import { ProductsType } from "@/types/ProductsTypes";
 //   return productsData;
 // }
 
+// ================ User Added Products ==================
 // 1. CREATE: Naya Product Add Karein
 export async function addProducts(product: ProductsType, userId: string) {
   const timeID = String(Date.now());
@@ -47,6 +49,8 @@ export async function addProducts(product: ProductsType, userId: string) {
       ...product,
       productID: userId,
       id: timeID,
+      userQty: 1,
+      sold: 0,
     });
   } catch (error) {
     console.error("Error adding product:", error);
@@ -80,21 +84,21 @@ export async function getProducts(userId: string): Promise<ProductsType[]> {
 }
 
 // 3. UPDATE: Existing Product Ko Edit Karein
-export async function updateProduct(product: ProductsType, editID: string) {
+export async function updateProduct(products: ProductsType[] | ProductsType) {
+  const product = Array.isArray(products) ? products : [products];
   try {
-    if (editID) {
-      const productRef = doc(firestoreDB, "Products", editID);
-
-      // Sirf wo fields update karein jo bheji gayi hain
-      await updateDoc(productRef, {
-        name: product.name,
-        price: product.price,
-        description: product.description,
-        updatedAt: Timestamp.now(),
+    const batch = writeBatch(firestoreDB);
+    product.forEach((p) => {
+      batch.update(doc(firestoreDB, "Products", p.id!), {
+        name: p.name,
+        price: p.price,
+        description: p.description,
+        Qty: p.Qty,
+        userQty: p.userQty,
+        sold: p.sold,
       });
-
-      return { success: true };
-    }
+    });
+    await batch.commit();
   } catch (error) {
     console.error("Error updating product:", error);
     throw new Error("Failed to update product");
@@ -113,26 +117,17 @@ export async function deleteProduct(productId: string) {
   }
 }
 
+// ================= User Cart Products =====================
 // 1. Add In Cart
-export async function addInCart(
-  product: ProductsType[] | ProductsType,
-  userId: string,
-  id?: string,
-) {
+export async function addInCart(product: ProductsType[] | ProductsType) {
+  const batch = writeBatch(firestoreDB);
+  const products = Array.isArray(product) ? product : [product];
+
   try {
-    if (Array.isArray(product)) {
-      for (const p of product) {
-        await setDoc(doc(firestoreDB, "Cart", p.id!), {
-          ...p,
-          Qty: 1,
-        });
-      }
-    } else {
-      await setDoc(doc(firestoreDB, "Cart", product.id!), {
-        ...product,
-        Qty: 1,
-      });
-    }
+    products.forEach((p) => {
+      batch.set(doc(firestoreDB, "Cart", p.id!), { ...p });
+    });
+    await batch.commit();
   } catch (error: any) {
     throw new Error("Product Was Not Added");
   }

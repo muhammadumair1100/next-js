@@ -7,10 +7,10 @@ import { User } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { Trash2, Minus, Plus } from "lucide-react";
 import { deleteFromCart } from "@/actions/products";
+import { updateProduct } from "@/actions/products";
 
 export default function CartPage() {
   const { user } = useAuth();
-  const [currUser, setCurrUser] = useState<User | null>();
   const [cartData, setCartData] = useState<ProductsType[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,9 +20,7 @@ export default function CartPage() {
       try {
         setLoading(true);
         if (user) {
-          setCurrUser(user);
           const data = await getFromCart(user.uid);
-          console.log(data);
           setCartData([...data]);
         }
       } catch (err: any) {
@@ -38,31 +36,44 @@ export default function CartPage() {
 
   // ⭐ Calculations
   const subtotal = cartData.reduce(
-    (acc, item) => acc + Number(item.price) * (item.Qty || 1),
+    (acc, item) => acc + item.sellingPrice! * (item.userQty || 1),
     0,
   );
-  const shipping = cartData.length > 0 ? 5 : 0;
+  const shipping = cartData.length > 0 ? 50 : 0;
   const tax = subtotal * 0.05;
   const total = subtotal + shipping + tax;
 
   function handleIncrease(id?: string) {
     setCartData((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, Qty: (item.Qty || 1) + 1 } : item,
-      ),
+      prev.map((i) => {
+        if (i.id === id && (i.Qty ?? 0) > 0) {
+          return {
+            ...i,
+            userQty: (i.userQty ?? 0) + 1,
+            sold: (i.userQty ?? 0) + 1,
+            Qty: (i.Qty ?? 0) - 1,
+          };
+        }
+        return i;
+      }),
     );
   }
 
   function handleDecrease(id?: string) {
     setCartData((prev) =>
-      prev.map((item) =>
-        item.id === id
-          ? { ...item, Qty: Math.max(1, (item.Qty || 1) - 1) }
-          : item,
-      ),
+      prev.map((i) => {
+        if (i.id === id && (i.userQty ?? 0) > 1) {
+          return {
+            ...i,
+            userQty: (i.userQty ?? 0) - 1,
+            sold: (i.userQty ?? 0) - 1,
+            Qty: (i.Qty ?? 0) + 1,
+          };
+        }
+        return i;
+      }),
     );
   }
-
   async function handleDelete(id?: string, proID?: string) {
     if (!confirm("Are you sure you want to remove this product?")) return;
 
@@ -77,8 +88,13 @@ export default function CartPage() {
     }
   }
 
-  function handleSellOut() {
-    console.log("Sell out clicked", cartData);
+  async function handleSellOut() {
+    try {
+      await updateProduct(cartData);
+      console.log("done");
+    } catch (err: any) {
+      console.log(err.message);
+    }
   }
 
   if (loading) {
@@ -206,7 +222,7 @@ export default function CartPage() {
                         </button>
 
                         <span className="flex h-7 w-9 items-center justify-center border-x border-slate-200 bg-white text-xs font-semibold text-slate-900">
-                          {data.Qty || 1}
+                          {data.userQty || 1}
                         </span>
 
                         <button
@@ -221,7 +237,10 @@ export default function CartPage() {
 
                     <div className="text-right">
                       <p className="text-lg font-bold text-slate-900">
-                        ${(Number(data.price) * (data.Qty || 1)).toFixed(2)}
+                        $
+                        {(
+                          Number(data.sellingPrice) * (data.userQty || 1)
+                        ).toFixed(2)}
                       </p>
                       <button
                         onClick={() => handleDelete(data.id!, data.productID)}

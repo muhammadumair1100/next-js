@@ -12,8 +12,7 @@ import {
   Circle,
   ShoppingBag,
 } from "lucide-react";
-import { onAuthStateChanged, User } from "firebase/auth";
-import { auth } from "@/lib/Auth";
+import { User } from "firebase/auth";
 import {
   addProducts,
   getProducts,
@@ -22,34 +21,27 @@ import {
   addInCart,
 } from "@/actions/products";
 import { ProductsType } from "@/types/ProductsTypes";
-import { logOut } from "@/actions/auth";
 import { useRouter } from "next/navigation";
-import { useActivity } from "@/contextAPI/ActivityContent";
-import { getUser } from "@/actions/signUpDatabase";
 import { useAuth } from "@/contextAPI/AuthContext";
-import { userActivity } from "@/actions/signUpDatabase";
 import Link from "next/link";
+import { field } from "firebase/firestore/pipelines";
 
 export default function ProductsPage() {
   const { user } = useAuth();
-
-  const { setUserActivity } = useActivity();
-  const router = useRouter();
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [products, setProducts] = useState<ProductsType[]>([]);
   const [loading, setLoading] = useState(false);
   const [select, setSelect] = useState<boolean>(false);
   const [selected, setSelected] = useState<number[]>([]);
-
-  // Form State
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [fields, setFields] = useState<ProductsType>({
     name: "",
-    price: "",
+    price: 0,
+    sellingPrice: 0,
     description: "",
+    Qty: 0,
   });
-
-  const [editingId, setEditingId] = useState<string | null>(null);
 
   // When User Add Product It Will Be Shown Too
   async function fetchProducts(uid: string) {
@@ -57,6 +49,7 @@ export default function ProductsPage() {
       setLoading(true);
       const productData = await getProducts(uid);
       setProducts(productData || []);
+      console.log(products);
     } catch (err) {
       console.error("Failed to fetch products", err);
     } finally {
@@ -77,7 +70,12 @@ export default function ProductsPage() {
   // Input Fields To Add Product
   function handleInputFields(e: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = e.target;
-    setFields({ ...fields, [name]: value });
+    const numberFields = ["Qty", "price", "sellingPrice"];
+
+    setFields({
+      ...fields,
+      [name]: numberFields.includes(name) ? Number(value) : value,
+    });
   }
 
   // To Edit Product Or Add
@@ -85,7 +83,7 @@ export default function ProductsPage() {
     e.preventDefault();
     if (!currentUser) return;
 
-    if (!fields.name || !fields.price || !fields.description) {
+    if (!fields.name || !fields.price || !fields.description || !fields.Qty) {
       alert("Please fill all fields");
       return;
     }
@@ -93,12 +91,24 @@ export default function ProductsPage() {
     try {
       setLoading(true);
       if (editingId) {
-        await updateProduct(fields, editingId);
+        const updatedProducts = products.map((p) =>
+          p.id === editingId
+            ? {
+                ...p,
+                name: fields.name,
+                price: fields.price,
+                description: fields.description,
+                Qty: fields.Qty,
+              }
+            : p,
+        );
+        // setProducts(updatedProducts);
+        await updateProduct(updatedProducts);
       } else {
         await addProducts(fields, currentUser.uid);
       }
 
-      setFields({ name: "", price: "", description: "" });
+      setFields({ name: "", price: 0, description: "", Qty: 0 });
       setEditingId(null);
 
       await fetchProducts(currentUser.uid);
@@ -115,6 +125,7 @@ export default function ProductsPage() {
       name: product.name,
       price: product.price,
       description: product.description,
+      Qty: product.Qty,
     });
     setEditingId(product.id || null);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -122,7 +133,7 @@ export default function ProductsPage() {
 
   // Cancel Editing Product
   const handleCancelEdit = () => {
-    setFields({ name: "", price: "", description: "" });
+    setFields({ name: "", price: 0, description: "" });
     setEditingId(null);
   };
 
@@ -152,7 +163,7 @@ export default function ProductsPage() {
     try {
       if (select && selected.length > 0) {
         const sPro = products.filter((p) => selected.includes(Number(p.id)));
-        if (currentUser) await addInCart(sPro, currentUser.uid);
+        if (currentUser) await addInCart(sPro);
         alert("Products Were Added");
         setSelect(false);
         setSelected([]);
@@ -170,13 +181,12 @@ export default function ProductsPage() {
       setSelected((prev) =>
         prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
       );
-      setSelected((prev) => prev.filter((p) => p));
     }
   }
 
-  async function handleAddSingleProduct(product: ProductsType, id: string) {
+  async function handleAddSingleProduct(product: ProductsType) {
     try {
-      await addInCart(product, id);
+      await addInCart(product);
       alert("Product Was Added");
     } catch (error: any) {
       alert(error.message);
@@ -256,7 +266,22 @@ export default function ProductsPage() {
                   <input
                     type="number"
                     name="price"
-                    value={fields.price}
+                    value={fields.price || ""}
+                    onChange={handleInputFields}
+                    placeholder="0.00"
+                    step="0.01"
+                    className="mt-1 block w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Selling Price ($)
+                  </label>
+                  <input
+                    type="number"
+                    name="sellingPrice"
+                    value={fields.sellingPrice || ""}
                     onChange={handleInputFields}
                     placeholder="0.00"
                     step="0.01"
@@ -274,6 +299,21 @@ export default function ProductsPage() {
                     value={fields.description}
                     onChange={handleInputFields}
                     placeholder="Brief details about the product..."
+                    className="mt-1 block w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Stock Quantity
+                  </label>
+                  <input
+                    type="number"
+                    name="Qty"
+                    value={fields.Qty || ""}
+                    onChange={handleInputFields}
+                    placeholder="e.g. 10"
+                    min="1"
                     className="mt-1 block w-full rounded-lg border border-slate-300 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
                   />
                 </div>
@@ -329,16 +369,23 @@ export default function ProductsPage() {
                 </div>
               ) : (
                 <ul className="divide-y max-h-150 overflow-y-scroll scrollbar-none divide-slate-100">
-                  {products.map((product, index) => (
+                  {products.map((product) => (
                     <li
-                      onClick={() =>
-                        handleSelectedProducts(Number(product.id!))
+                      style={{
+                        opacity: product.Qty! > 0 ? 1 : 0.3,
+                        cursor: product.Qty! > 0 ? "cursor" : "not-allowed",
+                      }}
+                      onClick={
+                        product.Qty! > 0
+                          ? () => handleSelectedProducts(Number(product.id!))
+                          : undefined
                       }
                       key={product.id}
-                      className="group flex cursor-pointer items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
+                      className="group flex items-center justify-between px-6 py-4 hover:bg-slate-50 transition-colors"
                     >
                       <div className="flex items-center gap-4">
                         {select &&
+                          product.Qty! > 0 &&
                           (selected.includes(Number(product.id)) ? (
                             <CheckCircle2 className="text-teal-600 size-4" />
                           ) : (
@@ -356,19 +403,35 @@ export default function ProductsPage() {
                             {product.description}
                           </p>
                           <p className="mt-1 text-sm font-bold text-teal-600">
-                            ${product.price}
+                            ${product.sellingPrice}
                           </p>
+                          <span className="text-black/60 font-bold text-[12px]">
+                            Quantity: {product.Qty}
+                          </span>
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                        {String(product.Qty) === "0" ? (
+                          <span className="bg-gray-200 px-3 py-1 text-[10px] font-medium rounded-md">
+                            Out of stock
+                          </span>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => handleAddSingleProduct(product)}
+                              className="rounded-md cursor-pointer bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
+                            >
+                              Buy
+                            </button>
+                          </>
+                        )}
                         <button
-                          onClick={() =>
-                            handleAddSingleProduct(product, product.id!)
-                          }
-                          className="rounded-md cursor-pointer bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 transition-colors"
+                          onClick={() => handleDelete(product.id!)}
+                          className="rounded-md p-2 text-slate-400 cursor-pointer hover:bg-red-50 hover:text-red-600 transition-colors"
+                          title="Delete"
                         >
-                          Buy
+                          <Trash2 size={18} />
                         </button>
 
                         <button
@@ -377,13 +440,6 @@ export default function ProductsPage() {
                           title="Edit"
                         >
                           <Edit2 size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(product.id!)}
-                          className="rounded-md p-2 text-slate-400 cursor-pointer hover:bg-red-50 hover:text-red-600 transition-colors"
-                          title="Delete"
-                        >
-                          <Trash2 size={18} />
                         </button>
                       </div>
                     </li>
