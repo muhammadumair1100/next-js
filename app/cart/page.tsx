@@ -8,6 +8,8 @@ import { useEffect, useState } from "react";
 import { Trash2, Minus, Plus } from "lucide-react";
 import { deleteFromCart } from "@/actions/products";
 import { updateProduct } from "@/actions/products";
+import Link from "next/link";
+import emailjs from "@emailjs/browser";
 
 export default function CartPage() {
   const { user } = useAuth();
@@ -74,11 +76,12 @@ export default function CartPage() {
       }),
     );
   }
-  async function handleDelete(id?: string, proID?: string) {
+
+  async function handleDelete(product: ProductsType, proID?: string) {
     if (!confirm("Are you sure you want to remove this product?")) return;
 
     try {
-      await deleteFromCart(id!);
+      await deleteFromCart(product);
       if (user) {
         const data = await getFromCart(proID!);
         setCartData([...data]);
@@ -91,7 +94,7 @@ export default function CartPage() {
   async function handleSellOut() {
     try {
       await updateProduct(cartData);
-      console.log("done");
+      await deleteFromCart(cartData);
     } catch (err: any) {
       console.log(err.message);
     }
@@ -106,6 +109,74 @@ export default function CartPage() {
         <p className="mt-6 text-sm font-medium text-slate-500">
           Loading your cart...
         </p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-teal-50/30 px-4">
+        <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-lg">
+          {/* Icon */}
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 text-teal-600">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-8 w-8"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+          </div>
+
+          {/* Text */}
+          <h2 className="mt-6 text-2xl font-bold text-slate-900">
+            Login Required
+          </h2>
+          <p className="mt-2 text-sm text-slate-500">
+            You need to be logged in to view your cart. Please login to
+            continue.
+          </p>
+
+          {/* Button */}
+          <Link
+            href="/login"
+            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-teal-600/30 transition-all hover:bg-teal-700 hover:shadow-teal-700/40 active:scale-95"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+              />
+            </svg>
+            Go to Login
+          </Link>
+
+          {/* Ya Signup */}
+          <p className="mt-4 text-xs text-slate-400">
+            Don't have an account?{" "}
+            <Link
+              href="/signup"
+              className="font-semibold text-teal-600 hover:text-teal-700"
+            >
+              Sign Up
+            </Link>
+          </p>
+        </div>
       </div>
     );
   }
@@ -147,7 +218,10 @@ export default function CartPage() {
               Review your items before checkout
             </p>
           </div>
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-600 text-white shadow-lg shadow-teal-600/30">
+          <Link
+            href={"/productpage"}
+            className="flex h-14 w-14 items-center justify-center rounded-2xl bg-teal-600 text-white shadow-lg shadow-teal-600/30"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-7 w-7"
@@ -162,7 +236,7 @@ export default function CartPage() {
                 d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
               />
             </svg>
-          </div>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
@@ -243,7 +317,7 @@ export default function CartPage() {
                         ).toFixed(2)}
                       </p>
                       <button
-                        onClick={() => handleDelete(data.id!, data.productID)}
+                        onClick={() => handleDelete(data, data.productID)}
                         className="mt-2 rounded-md p-2 text-slate-400 cursor-pointer hover:bg-red-50 hover:text-red-600 transition-colors"
                         title="Delete"
                       >

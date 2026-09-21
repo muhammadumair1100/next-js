@@ -10,6 +10,7 @@ import { SignupTypes } from "@/types/AuthTypes";
 import { firestoreDB } from "@/lib/authDatabase";
 import { UserActivity } from "@/types/Activity";
 
+// to store User (FirstName) and (LastName) in Firestore.
 export async function registerUser(
   uid: string | undefined,
   userData: { firstName: string; lastName: string },
@@ -20,6 +21,7 @@ export async function registerUser(
   }
 }
 
+// to get User (FirstName) and (LastName) from Firestore.
 export async function getUser(
   userID: string,
 ): Promise<{ firstName: string; lastName: string } | undefined> {
@@ -35,10 +37,12 @@ export async function getUser(
   }
 }
 
+// to store Every UserActivity When he logedin or logout
 export async function userActivity(activities: UserActivity) {
   await addDoc(collection(firestoreDB, "Activities"), activities);
 }
 
+// to get Every UserActivity When he logedin or logout.
 export async function getActivity(): Promise<UserActivity[] | undefined> {
   const activity = await getDocs(collection(firestoreDB, "Activities"));
 

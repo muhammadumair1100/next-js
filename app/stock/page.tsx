@@ -1,4 +1,120 @@
+"use client";
+import { getProducts } from "@/actions/products";
+import { ProductsType } from "@/types/ProductsTypes";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/contextAPI/AuthContext";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
 export default function StockPage() {
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const [products, setProducts] = useState<ProductsType[]>([]);
+
+  const totalStock = products.reduce((acc, p) => acc + (p.Qty ?? 0), 0);
+  const totalSold = products.reduce((acc, p) => acc + (p.sold ?? 0), 0);
+  const totalProfit = products.reduce(
+    (acc, p) =>
+      acc + (Number(p.sellingPrice) - Number(p.price)) * (p.sold ?? 0),
+    0,
+  );
+  const remaining = totalStock - totalSold;
+
+  useEffect(() => {
+    async function getData() {
+      try {
+        if (user) {
+          const data = await getProducts(user.uid);
+          setProducts(data);
+        }
+      } catch (err: any) {
+        console.log(err.message);
+      }
+    }
+    getData();
+  }, [user]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-teal-50/30">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-12 w-12 animate-spin rounded-full border-4 border-teal-100 border-t-teal-600"></div>
+          <p className="text-sm font-medium text-slate-500">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-white to-teal-50/30 px-4">
+        <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-lg">
+          {/* Icon */}
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-teal-50 text-teal-600">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-8 w-8"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+              />
+            </svg>
+          </div>
+
+          {/* Text */}
+          <h2 className="mt-6 text-2xl font-bold text-slate-900">
+            Login Required
+          </h2>
+          <p className="mt-2 text-sm text-slate-500">
+            You need to be logged in to view your stock. Please login to
+            continue.
+          </p>
+
+          {/* Button */}
+          <Link
+            href="/login"
+            className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-teal-600/30 transition-all hover:bg-teal-700 hover:shadow-teal-700/40 active:scale-95"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+              />
+            </svg>
+            Go to Login
+          </Link>
+
+          {/* Ya Signup */}
+          <p className="mt-4 text-xs text-slate-400">
+            Don't have an account?{" "}
+            <Link
+              href="/signup"
+              className="font-semibold text-teal-600 hover:text-teal-700"
+            >
+              Sign Up
+            </Link>
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-teal-50/30 px-4 py-10 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -12,7 +128,10 @@ export default function StockPage() {
               Track your inventory, sales and profit
             </p>
           </div>
-          <button className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-teal-600/30 transition-all hover:bg-teal-700 hover:shadow-teal-700/40 active:scale-95">
+          <Link
+            href={"/productpage"}
+            className="inline-flex items-center gap-2 rounded-xl bg-teal-600 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-teal-600/30 transition-all hover:bg-teal-700 hover:shadow-teal-700/40 active:scale-95"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
@@ -28,7 +147,7 @@ export default function StockPage() {
               />
             </svg>
             Add Product
-          </button>
+          </Link>
         </div>
 
         {/* Dashboard Cards */}
@@ -55,7 +174,9 @@ export default function StockPage() {
                 </svg>
               </div>
             </div>
-            <p className="mt-3 text-3xl font-bold text-slate-900">67</p>
+            <p className="mt-3 text-3xl font-bold text-slate-900">
+              {totalStock}
+            </p>
             <p className="mt-1 text-xs text-slate-500">items total</p>
           </div>
 
@@ -81,7 +202,9 @@ export default function StockPage() {
                 </svg>
               </div>
             </div>
-            <p className="mt-3 text-3xl font-bold text-slate-900">23</p>
+            <p className="mt-3 text-3xl font-bold text-slate-900">
+              {totalSold}
+            </p>
             <p className="mt-1 text-xs text-slate-500">items sold</p>
           </div>
 
@@ -107,7 +230,9 @@ export default function StockPage() {
                 </svg>
               </div>
             </div>
-            <p className="mt-3 text-3xl font-bold text-slate-900">44</p>
+            <p className="mt-3 text-3xl font-bold text-slate-900">
+              {remaining}
+            </p>
             <p className="mt-1 text-xs text-slate-500">items left</p>
           </div>
 
@@ -133,7 +258,9 @@ export default function StockPage() {
                 </svg>
               </div>
             </div>
-            <p className="mt-3 text-3xl font-bold text-teal-600">$1,234.50</p>
+            <p className="mt-3 text-3xl font-bold text-teal-600">
+              ${totalProfit}
+            </p>
             <p className="mt-1 text-xs text-slate-500">earned</p>
           </div>
         </div>
@@ -205,287 +332,110 @@ export default function StockPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {/* Row 1 */}
-                <tr className="transition-colors hover:bg-slate-50/70">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 text-sm font-bold text-purple-600">
-                        H
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">
-                          Wireless Headphones
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          Premium noise cancellation
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-600">$50.00</td>
-                  <td className="px-6 py-4 text-sm font-semibold text-slate-900">
-                    $100.00
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
-                      10
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">
-                      3
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm font-semibold text-teal-600">
-                    +$150.00
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        className="rounded-md p-2 text-slate-400 transition-colors hover:bg-green-50 hover:text-green-600"
-                        title="Sell"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        className="rounded-md p-2 text-slate-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
-                        title="Edit"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        className="rounded-md p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                        title="Delete"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                {/* Row 2 */}
-                <tr className="transition-colors hover:bg-slate-50/70">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-blue-50 to-blue-100 text-sm font-bold text-blue-600">
-                        L
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">
-                          Laptop Stand
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          Adjustable aluminum
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-600">$20.00</td>
-                  <td className="px-6 py-4 text-sm font-semibold text-slate-900">
-                    $45.00
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
-                      5
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">
-                      8
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm font-semibold text-teal-600">
-                    +$200.00
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        className="rounded-md p-2 text-slate-400 transition-colors hover:bg-green-50 hover:text-green-600"
-                        title="Sell"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        className="rounded-md p-2 text-slate-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
-                        title="Edit"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        className="rounded-md p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                        title="Delete"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-
-                {/* Row 3 — Low Stock */}
-                <tr className="bg-red-50/40 transition-colors hover:bg-red-50/70">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-red-50 to-red-100 text-sm font-bold text-red-600">
-                        U
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">
-                          USB-C Hub
-                        </p>
-                        <p className="text-xs text-red-500 font-medium">
-                          ⚠️ Low stock
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 text-sm text-slate-600">$15.00</td>
-                  <td className="px-6 py-4 text-sm font-semibold text-slate-900">
-                    $35.00
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
-                      2
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className="inline-flex rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">
-                      18
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 text-sm font-semibold text-teal-600">
-                    +$360.00
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        className="rounded-md p-2 text-slate-400 transition-colors hover:bg-green-50 hover:text-green-600"
-                        title="Sell"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M5 13l4 4L19 7"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        className="rounded-md p-2 text-slate-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
-                        title="Edit"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                          />
-                        </svg>
-                      </button>
-                      <button
-                        className="rounded-md p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
-                        title="Delete"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                          />
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
+                {products.length > 0 &&
+                  products.map((p) => (
+                    <tr
+                      key={p.id}
+                      className="transition-colors hover:bg-slate-50/70"
+                    >
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 text-sm font-bold text-purple-600">
+                            {p.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-slate-900">
+                              {p.name}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {p.description}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-slate-600">
+                        ${Number(p.price).toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-semibold text-slate-900">
+                        ${Number(p.sellingPrice).toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                          {p.Qty}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="inline-flex rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">
+                          {p.sold}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm font-semibold text-teal-600">
+                        +$
+                        {(
+                          (Number(p.sellingPrice) - Number(p.price)) *
+                          (p.sold ?? 0)
+                        ).toFixed(2)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            className="rounded-md p-2 text-slate-400 transition-colors hover:bg-green-50 hover:text-green-600"
+                            title="Sell"
+                          >
+                            <svg
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            className="rounded-md p-2 text-slate-400 transition-colors hover:bg-blue-50 hover:text-blue-600"
+                            title="Edit"
+                          >
+                            <svg
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            className="rounded-md p-2 text-slate-400 transition-colors hover:bg-red-50 hover:text-red-600"
+                            title="Delete"
+                          >
+                            <svg
+                              className="h-4 w-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                              strokeWidth={2}
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
@@ -493,8 +443,15 @@ export default function StockPage() {
           {/* Table Footer */}
           <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50/50 px-6 py-4">
             <p className="text-xs text-slate-500">
-              Showing <span className="font-semibold text-slate-700">3</span> of{" "}
-              <span className="font-semibold text-slate-700">3</span> products
+              Showing{" "}
+              <span className="font-semibold text-slate-700">
+                {products.length}
+              </span>{" "}
+              of{" "}
+              <span className="font-semibold text-slate-700">
+                {products.length}
+              </span>{" "}
+              products
             </p>
             <div className="flex items-center gap-2">
               <button className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50">

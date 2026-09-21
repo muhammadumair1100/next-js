@@ -145,10 +145,12 @@ export async function getFromCart(userId: string): Promise<ProductsType[]> {
 }
 
 // 3. Delete From Cart
-export async function deleteFromCart(id: string) {
+export async function deleteFromCart(product: ProductsType[] | ProductsType) {
+  const pro = Array.isArray(product) ? product : [product];
   try {
-    const productRef = doc(firestoreDB, "Cart", id);
-    await deleteDoc(productRef);
+    const batch = writeBatch(firestoreDB);
+    pro.forEach((p) => batch.delete(doc(firestoreDB, "Cart", p.id!)));
+    await batch.commit();
   } catch (error: any) {
     throw new Error("Product Was Not Deleted");
   }
