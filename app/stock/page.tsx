@@ -336,20 +336,33 @@ export default function StockPage() {
                   products.map((p) => (
                     <tr
                       key={p.id}
-                      className="transition-colors hover:bg-slate-50/70"
+                      className={`transition-colors ${p.Qty! < 3 ? "bg-red-50/40 hover:bg-red-50/70" : "bg-slate-50/40 hover:bg-slate-50/70"}`}
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 text-sm font-bold text-purple-600">
-                            {p.name.charAt(0).toUpperCase()}
-                          </div>
+                          {p.Qty! < 3 ? (
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-red-50 to-red-100 text-sm font-bold text-red-600">
+                              U
+                            </div>
+                          ) : (
+                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-purple-50 to-purple-100 text-sm font-bold text-purple-600">
+                              {p.name.charAt(0).toUpperCase()}
+                            </div>
+                          )}
+
                           <div>
                             <p className="text-sm font-semibold text-slate-900">
                               {p.name}
                             </p>
-                            <p className="text-xs text-slate-500">
-                              {p.description}
-                            </p>
+                            {p.Qty! < 3 ? (
+                              <p className="text-xs text-red-500 font-medium">
+                                ⚠️ Low stock
+                              </p>
+                            ) : (
+                              <p className="text-xs text-slate-500">
+                                {p.description}
+                              </p>
+                            )}
                           </div>
                         </div>
                       </td>
@@ -360,9 +373,15 @@ export default function StockPage() {
                         ${Number(p.sellingPrice).toFixed(2)}
                       </td>
                       <td className="px-6 py-4">
-                        <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
-                          {p.Qty}
-                        </span>
+                        {p.Qty! < 3 ? (
+                          <span className="inline-flex rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-semibold text-red-700">
+                            2
+                          </span>
+                        ) : (
+                          <span className="inline-flex rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                            {p.Qty}
+                          </span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <span className="inline-flex rounded-full bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-700">

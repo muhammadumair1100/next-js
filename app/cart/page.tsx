@@ -10,6 +10,7 @@ import { deleteFromCart } from "@/actions/products";
 import { updateProduct } from "@/actions/products";
 import Link from "next/link";
 import emailjs from "@emailjs/browser";
+import { getUser } from "@/actions/signUpDatabase";
 
 export default function CartPage() {
   const { user } = useAuth();
@@ -91,10 +92,48 @@ export default function CartPage() {
     }
   }
 
+  const serviceID = "service_340en45";
+  const templateID = "template_270jn2c";
+  const publicID = "w1-RqbHWcCZlcf2Or";
+
   async function handleSellOut() {
+    const lowStock = cartData.filter((d) => (d.Qty ?? 0) < 3);
+    console.log(lowStock);
+
     try {
       await updateProduct(cartData);
       await deleteFromCart(cartData);
+
+      if (user) {
+        const data = await getFromCart(user.uid);
+        const userData = await getUser(user.uid);
+        const firstName = userData?.firstName;
+        const lastName = userData?.lastName;
+
+        setCartData([...data]);
+
+        if (lowStock.length > 0) {
+          const productList = lowStock
+            .map(
+              (p) =>
+                `📦 ${p.name}\n   Stock: ${p.Qty} items (Low!)\n   Cost: $${p.price}\n   Sell: $${p.sellingPrice}`,
+            )
+            .join("\n\n");
+
+          await emailjs.send(
+            serviceID,
+            templateID,
+            {
+              to_name: `${firstName} ${lastName}`,
+              to_email: user.email,
+              product_list: productList,
+              count: lowStock.length,
+            },
+            publicID,
+          );
+          console.log("Email is also done");
+        }
+      }
     } catch (err: any) {
       console.log(err.message);
     }
